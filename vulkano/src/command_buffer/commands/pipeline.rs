@@ -1632,24 +1632,25 @@ impl RecordingCommandBuffer {
             for (index, element) in elements_to_check.iter().enumerate() {
                 let index = index as u32;
 
-                let element = match element {
-                    Some(x) => x,
+                match element {
+                    Some(x) => extra_check(set_num, binding_num, index, x)?,
                     None => {
-                        return Err(Box::new(ValidationError {
-                            problem: format!(
-                                "the currently bound pipeline accesses the resource bound to \
-                                descriptor set {set_num}, binding {binding_num}, \
-                                descriptor index {index}, but no descriptor was written to the \
-                                descriptor set currently bound to set {set_num}"
-                            )
-                            .into(),
-                            vuids: vuids!(vuid_type, "None-02699"),
-                            ..Default::default()
-                        }));
+                        // TODO: The issue here is that if the descriptor set uses variable
+                        // TODO: count then this crashes.
+
+                        // return Err(Box::new(ValidationError {
+                        //     problem: format!(
+                        //         "the currently bound pipeline accesses the resource bound to \
+                        //         descriptor set {set_num}, binding {binding_num}, \
+                        //         descriptor index {index}, but no descriptor was written to the \
+                        //         descriptor set currently bound to set {set_num}"
+                        //     )
+                        //     .into(),
+                        //     vuids: vuids!(vuid_type, "None-02699"),
+                        //     ..Default::default()
+                        // }));
                     }
                 };
-
-                extra_check(set_num, binding_num, index, element)?;
             }
 
             Ok(())
@@ -4738,7 +4739,7 @@ impl RawRecordingCommandBuffer {
                 }));
             }
         } else {
-            if size_of::<DrawIndirectCommand>() as DeviceSize > indirect_buffer.size() {
+            if size_of::<DrawMeshTasksIndirectCommand>() as DeviceSize > indirect_buffer.size() {
                 return Err(Box::new(ValidationError {
                     problem: "`draw_count` is 1, but `size_of::<DrawMeshTasksIndirectCommand>()` \
                         is greater than `indirect_buffer.size()`"
